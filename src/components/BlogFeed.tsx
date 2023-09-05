@@ -3,7 +3,7 @@ export async function BlogFeed() {
 
   return (
     <section>
-      <h1>Blog</h1>
+      <h1>My blogs:</h1>
 
       <ol>
         {allDocs.map((doc) => (
