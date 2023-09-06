@@ -1,5 +1,11 @@
 import { Editor } from "@/components/Editor";
+import { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Blogs - mdx",
+  description: "Generate and render MDX in Next.js",
+};
 
 export default function Home() {
   return (
