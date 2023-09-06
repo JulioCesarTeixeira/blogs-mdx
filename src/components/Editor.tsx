@@ -94,8 +94,9 @@ function EditorToolbar() {
   const editor = useSlate();
 
   return (
-    <div>
+    <div className="flex row-auto gap-2 my-2">
       <button
+        className="py-2 px-4 border-solid border-2 border-gray-300 rounded-md bg-slate-400 hover:bg-slate-600"
         onMouseDown={(event) => {
           event.preventDefault();
           makeBold(editor);
@@ -107,6 +108,7 @@ function EditorToolbar() {
         Bold
       </button>
       <button
+        className="py-2 px-4 border-solid border-2 border-gray-300 rounded-md bg-slate-400 hover:bg-slate-600"
         onMouseDown={(event) => {
           event.preventDefault();
           editor.addMark("italic", true);
@@ -118,6 +120,7 @@ function EditorToolbar() {
         Italic
       </button>
       <button
+        className="py-2 px-4 border-solid border-2 border-gray-300 rounded-md bg-slate-400 hover:bg-slate-600"
         onMouseDown={(event) => {
           event.preventDefault();
           editor.addMark("underline", true);
