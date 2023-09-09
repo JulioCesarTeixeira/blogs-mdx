@@ -5,46 +5,57 @@ import { useCallback, useEffect, useState } from "react";
 import {
   BaseEditor,
   Descendant,
-  Element,
   Editor as SlateEditor,
+  Element as SlateElement,
   Transforms,
   createEditor,
 } from "slate";
-import { HistoryEditor } from "slate-history";
+import { HistoryEditor, withHistory } from "slate-history";
 
 // Import the Slate components and React plugin.
-import { Editable, ReactEditor, Slate, useSlate, withReact } from "slate-react";
+import {
+  Editable,
+  ReactEditor,
+  RenderElementProps,
+  RenderLeafProps,
+  Slate,
+  useSlate,
+  withReact,
+} from "slate-react";
 
-export type CustomEditor = BaseEditor & ReactEditor & HistoryEditor;
-
-export type ParagraphElement = {
-  type: "paragraph";
-  children: CustomText[];
-};
-
-export type HeadingElement = {
-  type: "heading";
-  level: number;
-  children: CustomText[];
-};
-
-export type CustomElement = ParagraphElement | HeadingElement;
-
-export type FormattedText = { text: string; bold?: true };
-
-export type CustomText = FormattedText;
-
-declare module "slate" {
-  interface CustomTypes {
-    Editor: CustomEditor;
-    Element: CustomElement;
-    Text: CustomText;
-  }
-}
 const initialValue: Descendant[] = [
   {
     type: "paragraph",
-    children: [{ text: "A line of text in a paragraph." }],
+    children: [
+      { text: "This is editable " },
+      { text: "rich", bold: true },
+      { text: " text, " },
+      { text: "much", italic: true },
+      { text: " better than a " },
+      { text: "<textarea>", code: true },
+      { text: "!" },
+    ],
+  },
+  {
+    type: "paragraph",
+    children: [
+      {
+        text: "Since it's rich text, you can do things like turn a selection of text ",
+      },
+      { text: "bold", bold: true },
+      {
+        text: ", or add a semantically rendered block quote in the middle of the page, like this:",
+      },
+    ],
+  },
+  {
+    type: "block-quote",
+    children: [{ text: "A wise quote." }],
+  },
+  {
+    type: "paragraph",
+    align: "center",
+    children: [{ text: "Try it out for yourself!" }],
   },
 ];
 
@@ -133,30 +144,41 @@ function EditorToolbar() {
 }
 // Define our app...
 export const Editor = () => {
+  const renderElement = useCallback(
+    (props: RenderElementProps) => <Element {...props} />,
+    []
+  );
   // Create a Slate editor object that won't change across renders.
-  const [editor] = useState(() => withReact(createEditor()));
+  const [editor] = useState(() => withReact(withHistory(createEditor())));
 
   // Keep track of state for the value of the editor.
   const [value, setValue] = useState(initialValue);
 
-  const renderElement = useCallback((props: any) => {
-    switch (props.element.type) {
-      case "code":
-        return <CodeElement {...props} />;
-      case "quote":
-        return <blockquote {...props.attributes}>{props.children}</blockquote>;
-      case "link":
-        return (
-          <a {...props.attributes} href={props.element.url}>
-            {props.children}
-          </a>
-        );
-      default:
-        return <DefaultElement {...props} />;
-    }
-  }, []);
+  const Element = useCallback(
+    ({ attributes, children, element }: RenderElementProps) => {
+      switch (element.type) {
+        case "code":
+          return <CodeElement attributes={attributes}>{children}</CodeElement>;
+        case "quote":
+          return <blockquote {...attributes}>{children}</blockquote>;
+        case "link":
+          return (
+            <a {...attributes} href={element.url}>
+              {children}
+            </a>
+          );
+        default:
+          return (
+            <DefaultElement attributes={attributes} element={element}>
+              {children}
+            </DefaultElement>
+          );
+      }
+    },
+    []
+  );
 
-  const renderLeaf = useCallback((props: any) => {
+  const renderLeaf = useCallback((props: RenderLeafProps) => {
     return <Leaf {...props} />;
   }, []);
 
@@ -189,17 +211,15 @@ export const Editor = () => {
             // Prevent the "`" from being inserted by default.
             event.preventDefault();
             const [match] = SlateEditor.nodes(editor, {
-              // @ts-expect-error
-              match: (n) => n.type === "code",
+              match: (n) => SlateElement.isElement(n) && n.type === "code",
             });
             // Toggle the block type depending on whether there's already a match.
             Transforms.setNodes(
               editor,
-              // @ts-expect-error
               { type: match ? "paragraph" : "code" },
               {
                 match: (n) =>
-                  Element.isElement(n) && SlateEditor.isBlock(editor, n),
+                  SlateElement.isElement(n) && SlateEditor.isBlock(editor, n),
               }
             );
           }
@@ -228,6 +248,20 @@ export const Editor = () => {
           if (event.key === "&") {
             event.preventDefault();
             editor.insertText("and");
+          }
+
+          // If user presses ctrl + z, undo last action
+          if (event.ctrlKey && event.key === "z") {
+            console.log("ctrl + z");
+            event.preventDefault();
+            editor.undo();
+          }
+
+          // Redo if ctrl + shift + z is pressed
+          if (event.ctrlKey && event.shiftKey && event.key === "z") {
+            console.log("ctrl + shift + z");
+            event.preventDefault();
+            editor.redo();
           }
         }}
       />

@@ -8,6 +8,7 @@ export type CustomEditor = BaseEditor & ReactEditor & HistoryEditor;
 export type ParagraphElement = {
   type: "paragraph";
   children: CustomText[];
+  align?: "left" | "center" | "right";
 };
 
 export type HeadingElement = {
@@ -47,6 +48,11 @@ export type NumberedListElement = {
   children: ListItemElement[];
 };
 
+export type BlockQuoteElement = {
+  type: "block-quote";
+  children: CustomText[];
+};
+
 export type CustomElement =
   | ParagraphElement
   | HeadingElement
@@ -54,15 +60,17 @@ export type CustomElement =
   | CodeElement
   | QuoteElement
   | BulletedListElement
-  | NumberedListElement;
+  | NumberedListElement
+  | BlockQuoteElement;
 
 export type FormattedText = {
   text: string;
-  bold?: true;
-  italic?: true;
-  underline?: true;
-  strikethrough?: true;
-  code?: true;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  strikethrough?: boolean;
+  code?: boolean;
+  blockquote?: boolean;
 };
 
 export type CustomText = FormattedText;
